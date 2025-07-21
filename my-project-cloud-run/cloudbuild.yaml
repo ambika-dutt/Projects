@@ -1,0 +1,29 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'app'
+    args: [
+      'build', 
+      '-t', 
+      'us-central1-docker.pkg.dev/$PROJECT_ID/cloudrun-images/hello-python', 
+      '.'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 
+      'us-central1-docker.pkg.dev/$PROJECT_ID/cloudrun-images/hello-python'
+    ]
+
+  - name: 'hashicorp/terraform:light'
+    entrypoint: 'sh'
+    args:
+      - -c
+      - |
+        cd cloud-run
+        terraform init
+        terraform apply -auto-approve \
+          -var="project_id=$PROJECT_ID" \
+          -var="region=us-central1" \
+          -var="image_url=us-central1-docker.pkg.dev/$PROJECT_ID/cloudrun-images/hello-python"
+
+timeout: 900s
